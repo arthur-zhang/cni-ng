@@ -1,0 +1,18 @@
+[package]
+name = "ip"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.75"
+#ns = { path = "../ns" }
+netlink-ng = { path = "../../netlink-ng" }
+netns-ng = { path = "../../netns-ng" }
+cni-core = { path = "../cni-core" }
+rand = "0.8.5"
+ipnetwork = "0.20.0"
+iptables = "0.5.1"
+utils = { path = "../utils" }
+log = "0.4.20"
+
+

@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "ip",
+    "invoke",
+    "ipam",
+    "cni-core",
+    "utils",
+    "bridge",
+    "ipam-static",
+    "ipam-host-local",
+    "flannel-plugin"
+]

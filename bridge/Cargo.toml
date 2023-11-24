@@ -1,0 +1,21 @@
+[package]
+name = "bridge"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+netlink-ng = { path = "../../netlink-ng" }
+netns-ng = { path = "../../netns-ng" }
+cni-core = { path = "../cni-core" }
+#ns = { path = "../ns" }
+ip = { path = "../ip" }
+ipam = { path = "../ipam" }
+invoke = { path = "../invoke" }
+utils = { path = "../utils" }
+serde = "1.0.189"
+serde_json = "1.0.107"
+log = "0.4.20"
+ipnetwork = "0.20.0"
+anyhow = { version = "1.0.75" }

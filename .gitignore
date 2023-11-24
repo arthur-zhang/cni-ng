@@ -1,0 +1,6 @@
+target
+*.lock
+.idea
+/Makefile
+*.json
+*.sh

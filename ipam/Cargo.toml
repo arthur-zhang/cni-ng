@@ -1,0 +1,10 @@
+[package]
+name = "ipam"
+version = "0.1.0"
+edition = "2021"
+
+
+[dependencies]
+anyhow = "1.0.75"
+cni-core = { path = "../cni-core" }
+netlink-ng = { path = "../../netlink-ng" }

@@ -1,7 +1,7 @@
 use anyhow::{anyhow, bail};
 use log::info;
 use netlink_ng::nl_type::Veth;
-use netlink_ng::{Link, LinkAttrs, LinkId, LinkKind, Namespace};
+use netlink_ng::{Link, LinkAttrs, LinkKind, Namespace, TryAsLinkIndex};
 use netns_ng::Netns;
 use rand::random;
 
@@ -31,7 +31,7 @@ pub fn setup_veth(
     netns_ng::exec_netns!(&current_ns, &host_ns, result, || {
         let host_veth =
             netlink_ng::link_by_name(&host_veth_name)?.ok_or(anyhow!("veth not found"))?;
-        netlink_ng::link_set_up(&host_veth)?;
+        netlink_ng::link_set_up(host_veth.as_index())?;
         Ok(host_veth)
     });
     let host_veth: Result<Link, anyhow::Error> = result;
@@ -121,7 +121,8 @@ fn make_veth_pair(
     match link {
         Ok(link) => Ok(link),
         Err(e) => {
-            netlink_ng::link_del(LinkId::Name(container_veth_name))?;
+            let link_index = container_veth_name.try_as_index()?.ok_or(anyhow!("link not found"))?;
+            netlink_ng::link_del(link_index)?;
             return Err(e);
         }
     }

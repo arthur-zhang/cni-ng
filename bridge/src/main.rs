@@ -1,19 +1,19 @@
-use std::io::{stdin, stdout, Read, Write};
+use std::io::{Read, stdin, stdout, Write};
 use std::net::Ipv4Addr;
 
 use anyhow::{anyhow, bail};
 use ipnetwork::{IpNetwork, Ipv4Network};
 use log::info;
+use netlink_ng::{Link, LinkAttrs, LinkKind, TryAsLinkIndex};
 use netlink_ng::nl_type::{Bridge, Family, FAMILY_V4, FAMILY_V6};
-use netlink_ng::{Link, LinkAttrs, LinkId, LinkKind};
 use netns_ng::Netns;
 use serde::{Deserialize, Serialize};
 
+use cni_core::{logger, skel};
 use cni_core::error::is_already_exists_error;
 use cni_core::prelude::CniResult;
 use cni_core::skel::CmdArgs;
 use cni_core::types::{ExecResult, Interface, MacAddr, Route};
-use cni_core::{logger, skel};
 
 use crate::types::NetConf;
 
@@ -124,7 +124,7 @@ fn ensure_addr(br: &Link, ip: &IpNetwork, force_address: bool) -> CniResult<()> 
         IpNetwork::V4(_) => FAMILY_V4,
         IpNetwork::V6(_) => FAMILY_V6,
     };
-    let addrs = netlink_ng::addr_list(br, family)?;
+    let addrs = netlink_ng::addr_list(br.as_index(), family)?;
     for addr_item in &addrs {
         if addr_item.ipnet.ip() == ip.ip() {
             return Ok(());
@@ -144,7 +144,7 @@ fn ensure_addr(br: &Link, ip: &IpNetwork, force_address: bool) -> CniResult<()> 
                     ip
                 );
             }
-            netlink_ng::addr_del(br, addr_item)?;
+            netlink_ng::addr_del(br.as_index(), addr_item)?;
         }
     }
     let addr = netlink_ng::Addr {
@@ -152,7 +152,7 @@ fn ensure_addr(br: &Link, ip: &IpNetwork, force_address: bool) -> CniResult<()> 
         ..Default::default()
     };
     info!("add addr to br, addr: {:?}", addr);
-    netlink_ng::addr_add(br, &addr)?;
+    netlink_ng::addr_add(br.as_index(), &addr)?;
     // todo set bridge mac addr
 
     Ok(())
@@ -345,7 +345,8 @@ pub fn ensure_bridge(
         }
     };
     if promisc_mode {
-        netlink_ng::set_promisc_on(LinkId::Name(&br_name))?;
+        let link_index = br_name.try_as_index()?.ok_or(anyhow!("bridge not found"))?;
+        netlink_ng::set_promisc_on(link_index)?;
     }
 
     let br = bridge_by_name(br_name)?.ok_or(anyhow!("bridge not found"))?;
@@ -353,7 +354,7 @@ pub fn ensure_bridge(
     // we want to own the routes for this interface
     utils::sysctl_set(format!("net/ipv6/conf/{}/accept_ra", br_name).as_str(), "1")?;
 
-    netlink_ng::link_set_up(&br)?;
+    netlink_ng::link_set_up(br.as_index())?;
     Ok(br)
 }
 
